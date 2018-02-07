@@ -33,7 +33,7 @@ inline void TConnection< ProcessorT >::serve()
   asio::async_read_until(
     *socket_.get(),
     inbuf_,
-    '\n',
+    '\n',  // TODO Not all protocols may be line-based.
     strand_.wrap([this, self](const system::error_code &error, std::size_t sz)
     {
       if (error) {

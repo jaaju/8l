@@ -1,7 +1,8 @@
 #include "core/server.h"
+#include "examples/vadivelu/vadivelu.h"
 
 int main()
 {
-  etEl::TServer< > s("localhost", "8080");
+  etEl::TServer< etEl::examples::Vadivelu > s("localhost", "8080");
   s.run();
 }
