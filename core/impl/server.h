@@ -21,9 +21,11 @@ public:
 template< class ProcessorT >
 inline TConnection< ProcessorT >::TConnection(
   asio::io_service &service,
-  std::shared_ptr< tcp::socket > socket)
+  std::shared_ptr< tcp::socket > socket,
+  const ProcessorFactory &factory)
   : socket_(socket),
-  strand_(service)
+  strand_(service),
+  processor_(factory())
 {}
 
 template< class ProcessorT >
@@ -87,10 +89,14 @@ inline void TConnection< ProcessorT >::write()
 }
 
 template< class ProcessorT >
-inline TServer< ProcessorT >::TServer(const std::string &host, const std::string &service)
+inline TServer< ProcessorT >::TServer(
+    const std::string &host, const std::string &service,
+    const ProcessorFactory &factory)
   : service_(),
     acceptor_(service_),
-    socket_()
+    socket_(),
+    signals_(service_),
+    factory_(factory)
 {
   init(host, service);
   accept();
@@ -99,6 +105,13 @@ inline TServer< ProcessorT >::TServer(const std::string &host, const std::string
 template< class ProcessorT >
 inline void TServer< ProcessorT >::init(const std::string &host, const std::string &service)
 {
+  signals_.add(SIGUSR1);
+  signals_.async_wait(
+    [this](system::error_code, int)
+    {
+      service_.stop();
+    });
+
   tcp::resolver resolver(service_);
   tcp::endpoint endpoint(*resolver.resolve({host, service}));
   acceptor_.open(endpoint.protocol());
@@ -116,7 +129,7 @@ inline void TServer< ProcessorT >::accept()
     [this](const system::error_code &error)
     {
       if (!error) {
-        std::shared_ptr< ConnectionType > c(new ConnectionType(service_, socket_));
+        std::shared_ptr< ConnectionType > c(new ConnectionType(service_, socket_, factory_));
         c->serve();
       }
       accept();
@@ -127,6 +140,12 @@ template< class ProcessorT >
 inline void TServer< ProcessorT >::run()
 {
   service_.run();
+}
+
+template< class ProcessorT >
+inline unsigned short TServer< ProcessorT >::port() const
+{
+  return acceptor_.local_endpoint().port();
 }
 
 } // namespace etEl

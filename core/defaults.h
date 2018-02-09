@@ -10,11 +10,30 @@ template< class > class TConnection;
 
 namespace defaults {
 
-// A default implementation of template param0 (`ProcessorT`)
-// of template `etEl::TConnection`.
+// Default factory for processors.
+template< class ProcessorT >
+class ProcessorFactoryD
+{
+public:
+  // @interface-req FactoryDefaultConstructible or FactoryCopyConstructible
+  // of param0 of 'etEl::TConnection'.
+  ProcessorFactoryD() = default;
+  ProcessorFactoryD(const ProcessorFactoryD &) = default;
+  ProcessorFactoryD &operator =(const ProcessorFactoryD &) = default;
+
+  // @interface-req DefaultConstructibleViaFactory
+  // of param0 of 'etEl::TConnection'.
+  ProcessorT operator ()() const
+  {
+    return ProcessorT();
+  }
+};
+
+// A default implementation of template param0 ('ProcessorT')
+// of template 'etEl::TConnection'.
 // @tparam ProcessorT The parameter type that extends this class.
 //
-// An argument to param0 of `etEl::TConnection` may extend this
+// An argument to param0 of 'etEl::TConnection' may extend this
 // class and override functionality selectively.
 //
 // This class may also be used directly as an argument. Such use
@@ -24,7 +43,9 @@ template< class ProcessorT = void >
 class ProcessorD
 {
 public:
-  // @interface-req DefaultConstructible of param0 of `etEl::TConnection`.
+  // @interface-req CopyConstructible of param0 of 'etEl::TConnection'.
+  ProcessorD(const ProcessorD &) = default;
+  ProcessorD &operator =(const ProcessorD &) = default;
   ProcessorD() = default;
 
   typedef typename std::conditional<
@@ -32,26 +53,32 @@ public:
       ProcessorD,
       ProcessorT >::type ProcessorType;
 
+  typedef TConnection< ProcessorType > ConnectionType;
+
+  // @interface-req DefaultConstructibleViaFactory, FactoryName
+  // of param0 of 'etEl::TConnection'.
+  typedef ProcessorFactoryD< ProcessorType > FactoryType;
+
   // Method that receives notification of data received from
   // a connected client.
-  // @interface-req Callable of param0 of `etEl::TConnection`.
+  // @interface-req Callable of param0 of 'etEl::TConnection'.
   //
   // @param connection Reference to the connection that calls this method.
   // @param in Reference to input stream that contains client data.
   // @param nbytes Number of bytes in the stream.
-  // @return bool A `false` indicates that the connection must stop further
+  // @return bool A 'false' indicates that the connection must stop further
   //  processing and close the connection.
   //
   // This method is called from a connection when there is data available
-  // from the client. `ProcessorT` may override this method to get the
+  // from the client. 'ProcessorT' may override this method to get the
   // notifications.
   //
   // All data from a connection will be notified to the
   // same instance, and there will not be multiple concurrent calls to
-  // any single instance. Any data left unread in `in` will be available
+  // any single instance. Any data left unread in 'in' will be available
   // in subsequent calls to this method.
   //
-  // Method `write` (see `etEl::TConnection`) on `connection` can be called
+  // Method 'write' (see 'etEl::TConnection') on 'connection' can be called
   // to send any data back to the connected client.
   bool process(TConnection< ProcessorType > &connection,
     std::istream &in,

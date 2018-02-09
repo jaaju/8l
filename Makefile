@@ -14,5 +14,7 @@ override LDFLAGS +=
 override LDLIBS += -lboost_system
 override LIBS +=
 
+TEST_DIR = test
+
 include makefiles/vars.mk
 include makefiles/rules.mk
