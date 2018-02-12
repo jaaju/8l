@@ -1,5 +1,5 @@
 $(TARGET):: $(OBJECTS)
-	$(CXX) -o $@ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS) $(LIBS) $^
+	$(CXX) -o $@ $(CXXFLAGS) $(LDFLAGS) $^ $(LDLIBS) $(LIBS)
 
 $(OBJDIR)/%.d: %.cpp
 	@mkdir -p $(shell dirname $@)

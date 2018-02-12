@@ -8,10 +8,10 @@ TARGET = 8l
 SOURCES = 8l.cpp
 
 override CPPFLAGS += -I.
-override CXXFLAGS += -std=c++11 -Wall -Werror -g -ggdb -O0 -fno-inline -fno-eliminate-unused-debug-types
+override CXXFLAGS += -std=c++11 -Wall -Werror -g -ggdb -O0 -fno-inline -fno-eliminate-unused-debug-types -pthread
 
-override LDFLAGS +=
-override LDLIBS += -lboost_system
+override LDFLAGS += -Wl,-rpath=$(BOOST_HOME)/lib
+override LDLIBS += -L$(BOOST_HOME)/lib -lboost_system
 override LIBS +=
 
 TEST_DIR = test
