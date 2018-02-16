@@ -3,6 +3,7 @@
 -include $(shell echo $${HOME})/.make.defaults
 
 OBJDIR = build
+RM_OBJDIR = 1
 
 TARGET = 8l
 SOURCES = 8l.cpp
@@ -15,6 +16,10 @@ override LDLIBS += -L$(BOOST_HOME)/lib -lboost_system
 override LIBS +=
 
 TEST_DIR = test
+
+COVERAGE_SCOPE = $(CURDIR)
+
+coverage: RUN=$(CURDIR)/coverage-test
 
 include makefiles/vars.mk
 include makefiles/rules.mk

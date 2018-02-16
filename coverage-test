@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# This script runs the target and/or tests to measure coverage.
+
+set -eux
+
+trap 'kill -s SIGUSR1 $(pidof ${TARGET}) 2>/dev/null || echo >/dev/null' EXIT
+
+${OBJDIR}/${TARGET} &
+PID=${!}
+ps -fp ${PID}
+
+kill -s SIGUSR1 ${PID}

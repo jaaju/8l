@@ -2,6 +2,10 @@
 
 set -eux
 
+MAJOR=1
+MINOR=0
+PATCH=0
+
 ACCESS_ID="etel-ci@api-project-992270938682.iam.gserviceaccount.com"
 
 VERB=GET
@@ -26,9 +30,57 @@ QUERY="GoogleAccessId=${ACCESS_ID}&Expires=${EXPIRES}&Signature=${SIGNATURE}"
 
 DEPS_URL="https://storage.googleapis.com/${BUCKET}/${DEPS_FILE}?${QUERY}"
 
-mkdir -p deps
-curl -s "${DEPS_URL}" \
-  | tar -C deps -zx
+# Extract outside project directory.
+# Works well for LCOV --no-external.
+sudo mkdir -p /usr/local/8l/deps
 
-./deps/setup
-make test
+curl -s "${DEPS_URL}" \
+  | sudo tar -C /usr/local/8l/deps -zx
+
+# Default behavior of tar for superuser is to preserve permissions!
+sudo chmod 755 /usr/local/8l/deps
+
+# This should setup ${HOME}/.make.defaults and provide a 'covreport' recipe.
+/usr/local/8l/deps/setup
+make covreport
+
+# If master branch, update coverage report.
+if [ "${TRAVIS_BRANCH}" != "master" ]
+then
+  exit 0
+fi
+
+# Setup access to github.
+openssl aes-256-cbc -K ${encrypted_34d978248922_key} -iv ${encrypted_34d978248922_iv} -in travis_rsa.enc -out travis_rsa -d
+
+mv travis_rsa ${HOME}/.ssh/
+chmod 400 ${HOME}/.ssh/travis_rsa
+
+cat >> ${HOME}/.ssh/config <<EOF
+Host github.com
+  HostName github.com
+  User travis@travis-ci.org
+  IdentityFile ${HOME}/.ssh/travis_rsa
+  PasswordAuthentication no
+EOF
+
+BRANCH=$(git branch | grep -v '(no branch)' | grep '^*' | awk '{ print $2; }')
+COMMIT=$(git rev-parse HEAD)
+
+git checkout master
+
+cat build/.coverage/summary >> coverage-report
+tail -5 coverage-report > tmp
+mv tmp coverage-report
+
+git add coverage-report
+git commit -m '[skip ci] Update coverage.'
+
+git remote add origin2 git@github.com:jaaju/8l.git
+git push origin2 master
+
+tag="${MAJOR}.${MINOR}.${PATCH}-b$(date +%s)"
+git tag -a -m '[skip ci] Build tag.' "${tag}"
+git push origin2 : "${tag}"
+
+rm -f ${HOME}/.ssh/travis_rsa
