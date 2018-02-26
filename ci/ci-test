@@ -17,7 +17,7 @@ BUCKET=8b89942f-6dec-427f-944b-d66f1da83662
 DEPS_FILE=deps-1.0.0.tgz
 
 SIGNATURE=$(openssl sha -sha256 \
-            -sign gcs-key.pem < \
+            -sign ci/gcs-key.pem < \
             <(echo -ne \
               "${VERB}\n${CONTENT_MD5}\n${CONTENT_TYPE}\n${EXPIRES}\n/${BUCKET}/${DEPS_FILE}") | \
             base64 | \
@@ -51,9 +51,9 @@ then
 fi
 
 # Setup access to github.
-openssl aes-256-cbc -K ${encrypted_34d978248922_key} -iv ${encrypted_34d978248922_iv} -in travis_rsa.enc -out travis_rsa -d
+openssl aes-256-cbc -K ${encrypted_34d978248922_key} -iv ${encrypted_34d978248922_iv} -in ci/travis_rsa.enc -out ci/travis_rsa -d
 
-mv travis_rsa ${HOME}/.ssh/
+mv ci/travis_rsa ${HOME}/.ssh/
 chmod 400 ${HOME}/.ssh/travis_rsa
 
 cat >> ${HOME}/.ssh/config <<EOF
@@ -69,11 +69,11 @@ COMMIT=$(git rev-parse HEAD)
 
 git checkout master
 
-cat build/.coverage/summary >> coverage-report
-tail -5 coverage-report > tmp
-mv tmp coverage-report
+cat build/.coverage/summary >> ci/coverage-report
+tail -5 ci/coverage-report > tmp
+mv tmp ci/coverage-report
 
-git add coverage-report
+git add ci/coverage-report
 git commit -m '[skip ci] Update coverage.'
 
 git remote add origin2 git@github.com:jaaju/8l.git
