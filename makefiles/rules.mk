@@ -31,14 +31,13 @@ endif
 endif
 	$(GENINFO) -o $(OBJDIR)/.coverage/coverage.all --gcov-tool $(GCOV) $(COVERAGE_SCOPE)
 	$(LCOV) --gcov-tool $(GCOV) --no-external -o $(OBJDIR)/.coverage/coverage --extract $(OBJDIR)/.coverage/coverage.all "$(COVERAGE_SCOPE)/*"
-	echo COVERAGE_EXCL is $(COVERAGE_EXCL)
 ifneq (,$(COVERAGE_EXCL))
 	$(LCOV) --gcov-tool $(GCOV) --no-external -o $(OBJDIR)/.coverage/coverage.final --remove $(OBJDIR)/.coverage/coverage $(COVERAGE_EXCL)
 	mv $(OBJDIR)/.coverage/coverage.final $(OBJDIR)/.coverage/coverage
 endif
 	$(GENHTML) -o $(OBJDIR)/.coverage/report $(OBJDIR)/.coverage/coverage
 	$(LCOV) --list $(OBJDIR)/.coverage/coverage 2>/dev/null
-	$(LCOV) --gcov-tool $(GCOV) --summary $(OBJDIR)/.coverage/coverage.all "$(COVERAGE_SCOPE)/*" 2>&1 | grep -E '^\s*(lines|functions)\.'
+	$(LCOV) --gcov-tool $(GCOV) --summary $(OBJDIR)/.coverage/coverage "$(COVERAGE_SCOPE)/*" 2>&1 | grep -E '^\s*(lines|functions)\.'
 endif
 
 clean::
