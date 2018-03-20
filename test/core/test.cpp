@@ -13,28 +13,43 @@ namespace test {
 bool testDoneFunction()
 {
 
+  static const char *chunks[3] = { "one", "two", "three" };
+  std::string server_response;
+  std::for_each(chunks, chunks + sizeof(chunks)/sizeof(chunks[0]),
+    [&server_response](const char *r)
+    { server_response.append(r); });
+
   class TestProcessor: public defaults::ProcessorD< TestProcessor >
   {
   public:
-    TestProcessor(bool &called): called_(called) {}
-    bool &called_;
+    TestProcessor(int &called): called_(called) {}
+    int &called_;
 
     bool process(ConnectionType &connection, std::istream &, std::size_t)
     {
       // write something to client and set flag when 'done' is called.
-      std::shared_ptr< std::string > m(new std::string("hello!"));
-      connection.write(m->c_str(), m->length(),
-        [this, m](const system::error_code &, std::size_t) { called_ = true; });
+      write(connection, 0);
       return false;
+    }
+
+    void write(ConnectionType &connection, int i) const
+    {
+      if (3 == i) return;
+      connection.write(chunks[i], strlen(chunks[i]),
+        [this, &connection, i](const system::error_code &, std::size_t)
+        {
+          ++called_;
+          write(connection, i + 1);
+        });
     }
 
     class FactoryType
     {
     public:
       FactoryType(const FactoryType &) = default;
-      FactoryType(bool &called):
+      FactoryType(int &called):
         called_(called) {}
-      bool &called_;
+      int &called_;
       TestProcessor operator ()() const
       {
         return TestProcessor(called_);
@@ -44,7 +59,7 @@ bool testDoneFunction()
   };
 
   // Start server and client in two different threads.
-  bool called = false;
+  int called = 0;
   TServer< TestProcessor > server(
     "localhost", "0",
     TestProcessor::FactoryType(called));
@@ -64,7 +79,10 @@ bool testDoneFunction()
   tserver.join();
 
   // 'called' must be set.
-  etElAssert(called, "Done function not called!");
+  etElAssert(3 == called, "Done function not called!");
+
+  etElAssert(client.server_response() == server_response,
+             "Unexpected response from server!");
   return true;
 }
 

@@ -16,14 +16,22 @@ class Client
 public:
   Client();
 
-  // Connects to host/service and sends "hello!\n".
-  // Waits to read (anything) from the server, and completes.
+  // This method blocks the calling thread.
+  // It connects to host/service and sends "hello!\n".
+  // Then it waits to read (anything) from the server, and completes.
   void run(const std::string &host, unsigned short port);
+
+  const std::string &server_response() const;
 private:
   asio::io_service service_;
   tcp::socket socket_;
-  char buf_[1024];
+  std::string response_;
 };
+
+inline const std::string &Client::server_response() const
+{
+  return response_;
+}
 
 } // namespace test
 } // namespace etEl

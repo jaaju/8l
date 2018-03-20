@@ -17,16 +17,17 @@ void Client::run(const std::string &host, unsigned short port)
   asio::connect(socket_, i);
 
   // Oops! Need '\n' since server is line-based.
-  std::shared_ptr< std::string > m(new std::string("hello!\n"));
-  asio::async_write(
+  std::string m("hello!\n");
+  asio::write(
     socket_,
-    asio::buffer(m->c_str(), m->length()),
-    [m](const system::error_code &, std::size_t) {});
+    asio::buffer(m.c_str(), m.length()));
 
-  socket_.async_read_some(
-    asio::buffer(buf_, 1024),
-    [this](const system::error_code &, std::size_t) {});
-  service_.run();
+  system::error_code error;
+  char buf[1024] = { 0 };
+  while (!error) {
+    std::size_t sz = socket_.read_some(asio::buffer(buf, 1024), error);
+    response_.append(buf, sz);
+  }
 }
 
 } // namespace test

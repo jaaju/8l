@@ -7,8 +7,5 @@ SOURCES = test.cpp core/test.cpp common/client.cpp
 
 override CPPFLAGS += -I. -I..
 
-run:: $(OBJDIR)/$(TARGET)
-	$(OBJDIR)/$(TARGET)
-
 include vars.mk
 include rules.mk
