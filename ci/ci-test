@@ -40,8 +40,15 @@ curl -s "${DEPS_URL}" \
 # Default behavior of tar for superuser is to preserve permissions!
 sudo chmod 755 /usr/local/8l/deps
 
-# This should setup ${HOME}/.make.defaults and provide a 'covreport' recipe.
+# This should setup ${HOME}/.make.defaults with paths to dependencies available from the downloaded file.
 /usr/local/8l/deps/setup
+
+# Add 'covreport' recipe to ${HOME}/.make.defaults
+cat >> ${HOME}/.make.defaults <<EOF
+covreport: coverage
+	$(pwd)/report-coverage
+EOF
+
 make covreport
 
 # If master branch, update coverage report.

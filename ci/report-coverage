@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# This script creates a file with coverage summary from LCOV.
+# This is invoked from the 'covreport' recipe (that should be defined 
+# part of dependency setup in ./ci-test).
+
+set -eu
+
+echo -n "$(date +%Y-%m-%d-%H-%M-%S) " > ${OBJDIR}/.coverage/summary
+
+${LCOV} --gcov-tool ${GCOV} --summary ${OBJDIR}/.coverage/coverage "${COVERAGE_SCOPE}" 2>&1 \
+  | grep -E '^\s*(lines|functions)\.+:' \
+  | sed 's/\.\.//g' \
+  | grep -Eo '[ 0-9\.]+' \
+  | tr -d ' ' \
+  | grep . \
+  | while read p
+  do
+    read c
+    read t
+    echo -n "${c} ${t} ${p} " >> ${OBJDIR}/.coverage/summary
+  done
+
+echo "" >> ${OBJDIR}/.coverage/summary
